@@ -1,4 +1,5 @@
 from Circle import Circle as c
+from Chord import Chord as ch
 
 MINOR_SECOND = 1
 MAJOR_SECOND = 2
@@ -68,7 +69,7 @@ class Key(object):
     def get_key(self):
         return {'pitch': self.key, 'tonality': self.tonality}
     
-    def get_degree_chord(self, degree, dim_minor_7=True):
+    def get_chord(self, degree, dim_minor_7=True):
         degree = int(degree)
         ext = True if int(degree) > 8 else False
         roman = (degree - 1) % 8
@@ -85,7 +86,8 @@ class Key(object):
         if roman == 6 and self.tonality == 'minor' and not dim_minor_7:
             roman_quality = 'major'
         chord = c(self.notes[roman]).generate_triad(roman_quality)
-        return {'degree': degree, 'note': self.notes[roman], 'quality': roman_quality, 'chord': chord}
+        chord_obj = ch(chord, self.notes[roman], roman_quality) # Comment if dud
+        return {'degree': degree, 'key': self.notes[roman], 'quality': roman_quality, 'chord': chord_obj}
     
     def simple_str(self):
         return "%s %s" % (self.key, self.tonality)
