@@ -2,10 +2,11 @@ from util import MajorChordTransition
 from Measure import Measure
 
 class Song(object):
-    def __init__(self, name, composer, signature):
+    def __init__(self, name, composer, signature, original=None):
         self.name = name
         self.composer = composer
         self.signature = signature
+        self.original = original
         self.chords = []
         self.measures = []
         self.tonal_status = "1" # Chord we're currently on
@@ -20,7 +21,7 @@ class Song(object):
     def fill_measures(self, chord):
         beats_remaining = chord.n * self.signature.time.top
         self.measures.append(Measure(self.signature.time))
-        #print(len(self.measures))
+
         while beats_remaining > 0:
             if not self.measures[-1].filled:
                 self.measures[-1].fill(chord, n_beats=min(self.signature.time.top, beats_remaining))

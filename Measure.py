@@ -22,6 +22,9 @@ class Measure(object):
         self.beats_remaining -= 1
         # print(self.beat_chords)
         self.filled = True if self.beats_remaining == 0 else False
+        
+    def get_chord_locations(self):
+        return self.beat_chords
 
     def __str__(self):
         retstr = "["

@@ -32,7 +32,11 @@ class Key(object):
         """
         We may find it helpful to instantiate a tonic circle for us instead of using it statically.
         """
-        self.key = str(key).upper()
+        self.key = None
+        if len(key) == 2 and key[-1] == 'b':
+            self.key = str(key[0]).upper() + 'b'
+        else:
+            self.key = str(key).upper()
         self.tonality = tonality
         
         #I wanted this line to have a ternary operator but thats why I have to make the seperate Am CM keys below
