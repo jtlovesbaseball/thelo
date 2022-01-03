@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import util
+import copy
 
 #Less Magic Numbers
 BLACK = 0
@@ -81,11 +82,12 @@ class SubBlock(object):
         return a
     
     def add_time_info(self, timesig):
+        HORIZ_SPACE = 116 if len(str(timesig.bpm)) == 2 else 145
         a = np.zeros((self.h, self.w, N_CHAN), dtype=np.uint8)
         a[:] = WHITE
         cv2.putText(a, "%d bpm" % timesig.bpm, (START_X_B, int(self.h/3)),  fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=BLACK_TRI)
         if timesig.desc is not None:
-            cv2.putText(a, "(%s)" % timesig.desc, (START_X_B + 125, int(self.h/3)), fontFace=cv2.FONT_HERSHEY_COMPLEX, fontScale=1, color=BLACK_TRI)
+            cv2.putText(a, "(%s)" % timesig.desc, (START_X_B + HORIZ_SPACE, int(self.h/3)), fontFace=cv2.FONT_HERSHEY_COMPLEX, fontScale=1, color=BLACK_TRI)
         return a
     
     def return_first_of_line(self):
@@ -128,6 +130,17 @@ class SubBlock(object):
         cv2.line(patch, (299, 25), (299, 85), color=(0, 0, 0), thickness=1)
         cv2.line(patch, (299, 145), (299, 205), color=(0, 0, 0), thickness=1)
         return patch
+    
+    @staticmethod
+    def static_reg():
+        patch = np.zeros((MEASURE_H, MEASURE_W, 3), dtype=np.uint8) - 1
+        #treble/bass maker
+        for i in range(5):
+            cv2.line(patch, (0, 25 + 15*i), (300, 25 + 15*i), color =(0, 0, 0), thickness=1)
+            cv2.line(patch, (0, 145+ 15*i), (300, 145 + 15*i), color =(0, 0, 0), thickness=1)
+        cv2.line(patch, (299, 25), (299, 85), color=(0, 0, 0), thickness=1)
+        cv2.line(patch, (299, 145), (299, 205), color=(0, 0, 0), thickness=1)
+        return patch        
     
     def return_repeat_first_of_line(self):
         patch = np.zeros((MEASURE_H, MEASURE_W, 3), dtype=np.uint8) - 1
@@ -229,11 +242,11 @@ class PageBlock(object):
          
                 measure += 1
                 
-        self.page[0:PAGE_H, 0:MARGIN_L] = self.sub_blocks['L_MARGIN'].return_draw()
-        self.page[0:PAGE_H, MEASURE_4_END: PAGE_W] = self.sub_blocks['R_MARGIN'].return_draw()
+        # self.page[0:PAGE_H, 0:MARGIN_L] = self.sub_blocks['L_MARGIN'].return_draw()
+        # self.page[0:PAGE_H, MEASURE_4_END: PAGE_W] = self.sub_blocks['R_MARGIN'].return_draw()
         self.page[0:TITLE_AUTHOR, MARGIN_L:MEASURE_4_END] = self.sub_blocks['TITLE'].return_draw()
         self.page[TITLE_AUTHOR: TITLE_AUTHOR + 75, MARGIN_L:MEASURE_4_END] = self.sub_blocks['TIME'].return_draw()
-        self.page[LINE_5_END:PAGE_H, MARGIN_L:MEASURE_4_END] = self.sub_blocks['B_MARGIN'].return_draw()
+        # self.page[LINE_5_END:PAGE_H, MARGIN_L:MEASURE_4_END] = self.sub_blocks['B_MARGIN'].return_draw()
         
         cv2.imwrite(filename, self.page)
         
@@ -248,26 +261,56 @@ class PageBlock(object):
         self.page[0:TITLE_AUTHOR, MARGIN_L:MEASURE_4_END] = self.sub_blocks['TITLE'].add_title_info(song_title, song_composer, song_origin)
         self.page[TITLE_AUTHOR: TITLE_AUTHOR + 75, MARGIN_L:MEASURE_4_END] = self.sub_blocks['TIME'].add_time_info(song_time)
         
+        #i is the row we're on
         for i in range(len(Y_LIST) - 1):
             top_boundary = Y_LIST[i]
             bot_boundary = Y_LIST[i + 1]
             if i % 2 == 1:
                 continue # Don't make the breaks
+                
+            #j is the measure in the row
             for j in range(len(X_LIST) - 1):
                 left_boundary = X_LIST[j]
                 right_boundary = X_LIST[j + 1]
+                
+                #only the first measure of the rows neeeds special.
                 if j > 0:
                     continue
+                    
                 accidentals, n_acc = util.generate_accidentals_no_staff([MEASURE_H, MEASURE_W, 3], song_key)
-                timeframe = util.generate_time_signature([MEASURE_H, MEASURE_W, 3], song_time, n_acc)
-
-                self.page[top_boundary:bot_boundary, left_boundary:right_boundary] = cv2.bitwise_and(self.page[top_boundary:bot_boundary,
-                                                                                                               left_boundary:right_boundary],
-                                                                                                     accidentals)
-                self.page[top_boundary:bot_boundary, left_boundary:right_boundary] = cv2.bitwise_and(self.page[top_boundary:bot_boundary,
-                                                                                                               left_boundary:right_boundary],
-                                                                                                     timeframe)
+                timeframe, offset = util.generate_time_signature([MEASURE_H, MEASURE_W, 3], song_time, n_acc)
+                self.page[top_boundary:bot_boundary, left_boundary:right_boundary] = cv2.bitwise_and(self.page[top_boundary:bot_boundary, left_boundary:right_boundary], accidentals)
                 
+                #time signature only goes on the first row
+                if i == 0:
+                    self.page[top_boundary:bot_boundary, left_boundary:right_boundary] = cv2.bitwise_and(self.page[top_boundary:bot_boundary, left_boundary:right_boundary], timeframe)
+                    
+                #on nonfirst rows we need to move and smush our time and key.
+                if j == 0 and i > 0:
+                    # The 25 is for the time signature. It's not there.
+                    signature = copy.deepcopy(self.page[top_boundary:bot_boundary, left_boundary:left_boundary + offset - 25])
+                    new_w = 100
+                    new_h = signature.shape[0]
+                    resize_signature = cv2.resize(signature, (new_w, new_h), interpolation = cv2.INTER_AREA)
+                    
+                    replacement = SubBlock.static_reg()[:,0:offset-25]
+                    self.page[top_boundary:bot_boundary, left_boundary:left_boundary + offset - 25] = replacement
+                    self.page[top_boundary:bot_boundary, 0:100] = resize_signature
+                    cv2.line(self.page, (100, top_boundary + 25), 
+                             (100, top_boundary + 85), color=(0, 0, 0), thickness=1)
+                    cv2.line(self.page, (100, top_boundary + 145), 
+                             (100, top_boundary + 205), color=(0, 0, 0), thickness=1)                    
+                    
+                #first row we just move the full signature to the end
+                if i == 0 and j == 0:
+                    signature = copy.deepcopy(self.page[top_boundary:bot_boundary, left_boundary:left_boundary + offset])
+                    self.page[top_boundary:bot_boundary, left_boundary:right_boundary] = 255 # np.zeros((bot_boundary - top_boundary, right_boundary - left_boundary, 3), dtype=np.uint8)
+                    self.page[top_boundary:bot_boundary, right_boundary - offset: right_boundary] = signature
+                    cv2.line(self.page, (left_boundary + 299, top_boundary + 25), 
+                             (left_boundary + 299, top_boundary + 85), color=(0, 0, 0), thickness=1)
+                    cv2.line(self.page, (left_boundary + 299, top_boundary + 145), 
+                             (left_boundary + 299, top_boundary + 205), color=(0, 0, 0), thickness=1)
+                    
         if write:
             cv2.imwrite('test_out.jpg', self.page)
             

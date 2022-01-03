@@ -109,10 +109,12 @@ def generate_accidentals_no_staff(dims, keysig, fsharp_over_gflat=True):
     hour %= 12
 
     if hour < 6 or '#' in key:
-        sharps, flats = min(6, hour), 0
+        #sharps, flats = min(6, hour), 0
+        sharps, flats = hour, 0
         patch = generate_sharps(patch, sharps)
     elif hour > 6 or 'b' in key:
-        sharps, flats = 0, min(12 - hour, 6)
+        #sharps, flats = 0, min(12 - hour, 6)
+        sharps, flats = 0, 12 - hour
         patch = generate_flats(patch, flats)
     else:
         if not fsharp_over_gflat: # This is at the bottom of the enharmonic circle. I like sharps more than flats, this can be changed via arg.
@@ -133,7 +135,5 @@ def generate_time_signature(dims, song_time, n_acc):
     cv2.putText(patch, "%s" % bottom, (TOTAL_OFFSET, 80), fontScale=1.25, fontFace=cv2.FONT_HERSHEY_COMPLEX, color=(0, 0, 0), thickness=2)
     cv2.putText(patch, "%s" % top, (TOTAL_OFFSET, 170), fontScale=1.25, fontFace=cv2.FONT_HERSHEY_COMPLEX, color=(0, 0, 0), thickness=2)
     cv2.putText(patch, "%s" % bottom, (TOTAL_OFFSET, 205), fontScale=1.25, fontFace=cv2.FONT_HERSHEY_COMPLEX, color=(0, 0, 0), thickness=2)
-    return patch
-
-
-    
+    cv2.line(patch, (TOTAL_OFFSET + 25, 0), (TOTAL_OFFSET + 25, 255), thickness=1, color=(0, 0, 255))
+    return patch, TOTAL_OFFSET + 25
