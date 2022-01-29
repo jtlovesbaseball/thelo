@@ -19,6 +19,7 @@ OCTAVE        = 12
 FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 CIRCLE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
+SUPER_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
 
 SHARP_DOMINATED = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
 FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
@@ -26,8 +27,8 @@ FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
 MAJOR_MODE = [0, 2, 4, 5, 7, 9, 11, 12]
 MINOR_MODE = [0, 2, 3, 5, 7, 8, 10, 12]
 
+
 class Key(object):
-    
     def __init__(self, key, tonality='major', misc={}):
         """
         We may find it helpful to instantiate a tonic circle for us instead of using it statically.
@@ -39,9 +40,12 @@ class Key(object):
             self.key = str(key).upper()
         self.tonality = tonality
         
-        #I wanted this line to have a ternary operator but thats why I have to make the seperate Am CM keys below
         self.circle = SHARP_CIRCLE if (self.key in SHARP_DOMINATED or '#' in self.key) else FLAT_CIRCLE
         self.circle = CIRCLE if self.key == 'C' else self.circle
+        if key == "Cb" and tonality == "major":
+            self.circle = SUPER_FLAT_CIRCLE # CIRCLE if self.key == 'C' else self.circle
+        else:
+            pass
         self.tonic_val = self.circle.index(self.key)
         self.indicies = [(self.tonic_val + i) % OCTAVE for i in MAJOR_MODE]
         self.notes = [self.circle[i] for i in self.indicies]
@@ -73,7 +77,7 @@ class Key(object):
     def get_key(self):
         return {'pitch': self.key, 'tonality': self.tonality}
     
-    def get_chord(self, degree, dim_minor_7=True):
+    def get_chord(self, degree, dim_minor_7=True, n=2):
         degree = int(degree)
         ext = True if int(degree) > 8 else False
         roman = (degree - 1) % 8
@@ -90,7 +94,7 @@ class Key(object):
         if roman == 6 and self.tonality == 'minor' and not dim_minor_7:
             roman_quality = 'major'
         chord = c(self.notes[roman]).generate_triad(roman_quality)
-        chord_obj = ch(chord, self.notes[roman], roman_quality) # Comment if dud
+        chord_obj = ch(chord, self.notes[roman], roman_quality, n_measures=n) # Comment if dud
         return {'degree': degree, 'key': self.notes[roman], 'quality': roman_quality, 'chord': chord_obj}
     
     def simple_str(self):

@@ -16,6 +16,8 @@ OCTAVE        = 12
 FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 CIRCLE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
+SUPER_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+
 
 SHARP_DOMINATED = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
 FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
@@ -29,6 +31,7 @@ class Circle(object):
         self.tonic = key
         self.circle = SHARP_CIRCLE if (key in SHARP_DOMINATED or '#' in key) else FLAT_CIRCLE
         self.circle = CIRCLE if key == 'C' else self.circle
+        self.circle = SUPER_FLAT_CIRCLE if key == 'Cb' else self.circle
         self.tonic_val = self.circle.index(key)
         
     def generate_triad(self, quality='major', inversion=0, root_octave=3, bass=True):

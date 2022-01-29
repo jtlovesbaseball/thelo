@@ -29,8 +29,7 @@ class Chord(object):
                 newlist[-2] = '%s%s' % (newlist[-2], newlist[-1])
                 newlist = newlist[:-1]
             self.notes = newlist
-        
-    
+
     def __str__(self):
         chordstr = ""
         for i in range(len(self.notes)):
