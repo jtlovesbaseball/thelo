@@ -10,13 +10,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\raw\progressions_safe.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
       </map>
     </option>
   </component>

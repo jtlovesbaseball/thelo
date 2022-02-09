@@ -16,8 +16,11 @@ OCTAVE        = 12
 FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 CIRCLE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
-SUPER_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
 
+C_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'Fb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+G_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+F_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+C_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B#']
 
 SHARP_DOMINATED = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
 FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
@@ -31,7 +34,13 @@ class Circle(object):
         self.tonic = key
         self.circle = SHARP_CIRCLE if (key in SHARP_DOMINATED or '#' in key) else FLAT_CIRCLE
         self.circle = CIRCLE if key == 'C' else self.circle
-        self.circle = SUPER_FLAT_CIRCLE if key == 'Cb' else self.circle
+        parent_key = "String cheese"
+        if 'parent' in misc.keys():
+            parent_key = misc['parent']
+        self.circle = C_FLAT_CIRCLE if parent_key == 'Cb' else self.circle
+        self.circle = G_FLAT_CIRCLE if parent_key == 'Gb' else self.circle
+        self.circle = F_SHARP_CIRCLE if parent_key == 'F#' else self.circle
+        self.circle = C_SHARP_CIRCLE if parent_key == 'C#' else self.circle
         self.tonic_val = self.circle.index(key)
         
     def generate_triad(self, quality='major', inversion=0, root_octave=3, bass=True):

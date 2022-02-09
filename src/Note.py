@@ -1,7 +1,9 @@
-OCTAVE_ORDER = ['C', 'Db', 'C#', 'D', 'D#', 'Eb', 'E', 'E#', 'F', 'F#', 'Gb', 'G',
+OCTAVE_ORDER = ['C', 'Db', 'C#', 'D', 'D#', 'Eb', 'E', 'Fb', 'E#', 'F', 'F#', 'Gb', 'G',
                 'Ab', 'G#', 'A', 'A#', 'Bb', 'B', 'Cb']
 NOTEVALS_SIMPLE = {1: 'Quarter', 2: 'Half', 3: 'Dotted Half', 4: 'Whole'}
 SIMPLE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+
+from functools import total_ordering
 
 
 class DrawableNote(object):
@@ -15,8 +17,9 @@ class DrawableNote(object):
         self.num_beats = num_beats
         self.beat_value = beat_value
         self.measure = measure
-        self.order = SIMPLE_ORDER.index(self.letter[0])
-        self.absolute_order = ((self.octave - 2) * 8) + self.order
+        self.order = note.order
+        self.absolute_order = note.absolute_order
+        # Add logic to decrement order and abs order of E#
         
     def in_measure(self, m):
         return True if m == self.measure else False
@@ -28,8 +31,9 @@ class DrawableNote(object):
         return "%s Note %s (beat %d)" % (NOTEVALS_SIMPLE[self.num_beats], self.lookup, self.start_beat + 1)
 
 
+@total_ordering
 class Note(object):
-    def __init__(self, letter, octave, is_bass=False, is_flipped=False):
+    def __init__(self, letter, octave, is_bass=False, is_flipped=False, ao_modifier=0):
         self.letter = letter
         self.octave = octave
         self.is_bass = is_bass
@@ -37,6 +41,9 @@ class Note(object):
         self.lookup = "%s%d" % (letter, octave)
         self.selected = False
         self.unselected = False
+        self.order = SIMPLE_ORDER.index(self.letter[0])
+        self.absolute_order = ((self.octave - 2) * 8) + self.order
+        self.absolute_order += ao_modifier
     
     def select(self):
         self.selected = True
@@ -48,10 +55,10 @@ class Note(object):
     
     def __str__(self):
         if self.unselected:
-            return ""
+            return "Unselected %s" % self.lookup
         if self.selected:
             return self.lookup
-        return self
+        return "Unselected %s" % self.lookup
     
     def __lt__(self, o):
         if self.octave < o.octave:

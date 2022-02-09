@@ -19,7 +19,11 @@ OCTAVE        = 12
 FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 CIRCLE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
-SUPER_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+
+C_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'Fb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+G_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
+F_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+C_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B#']
 
 SHARP_DOMINATED = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
 FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
@@ -42,10 +46,14 @@ class Key(object):
         
         self.circle = SHARP_CIRCLE if (self.key in SHARP_DOMINATED or '#' in self.key) else FLAT_CIRCLE
         self.circle = CIRCLE if self.key == 'C' else self.circle
-        if key == "Cb" and tonality == "major":
-            self.circle = SUPER_FLAT_CIRCLE # CIRCLE if self.key == 'C' else self.circle
-        else:
-            pass
+        if self.key == "Cb":
+            self.circle = C_FLAT_CIRCLE
+        if self.key == "Gb":
+            self.circle = G_FLAT_CIRCLE
+        if self.key == "F#":
+            self.circle = F_SHARP_CIRCLE
+        if self.key == "C#":
+            self.circle = C_SHARP_CIRCLE
         self.tonic_val = self.circle.index(self.key)
         self.indicies = [(self.tonic_val + i) % OCTAVE for i in MAJOR_MODE]
         self.notes = [self.circle[i] for i in self.indicies]
@@ -56,19 +64,20 @@ class Key(object):
             self.notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
         
         if tonality == 'major':
-            self.tonic =  c(self.notes[0]).generate_triad('major')
-            self.supertonic =  c(self.notes[1]).generate_triad('minor')
-            self.mediant = c(self.notes[2]).generate_triad('minor')
-            self.subdominant = c(self.notes[3]).generate_triad('major')
+            self.tonic =  c(self.notes[0], misc={'parent': key}).generate_triad('major')
+            self.supertonic =  c(self.notes[1], misc={'parent': key}).generate_triad('minor')
+            # If we encounter enharmonics, they cause errors if we dont know the parent
+            self.mediant = c(self.notes[2], misc={'parent': key}).generate_triad('minor')
+            self.subdominant = c(self.notes[3], misc={'parent': key}).generate_triad('major')
             self.dominant = c(self.notes[4]).generate_triad('major')
             self.submediant = c(self.notes[5]).generate_triad('minor')
-            self.leadingtone = c(self.notes[6]).generate_triad('dim')
+            self.leadingtone = c(self.notes[6], misc={'parent': key}).generate_triad('dim')
             self.subtonic = None # I dont really understand music theory?
         else:
             self.tonic =  c(self.notes[0]).generate_triad('minor')
             self.supertonic =  c(self.notes[1]).generate_triad('dim')
-            self.mediant = c(self.notes[2]).generate_triad('major')
-            self.subdominant = c(self.notes[3]).generate_triad('minor')
+            self.mediant = c(self.notes[2], misc={'parent': key}).generate_triad('major')
+            self.subdominant = c(self.notes[3], misc={'parent': key}).generate_triad('minor')
             self.dominant = c(self.notes[4]).generate_triad('minor')
             self.submediant = c(self.notes[5]).generate_triad('major')
             self.leadingtone = c(self.notes[6]).generate_triad('dim')
@@ -93,7 +102,7 @@ class Key(object):
         roman_quality= quality_tonality[roman][self.tonality]
         if roman == 6 and self.tonality == 'minor' and not dim_minor_7:
             roman_quality = 'major'
-        chord = c(self.notes[roman]).generate_triad(roman_quality)
+        chord = c(self.notes[roman], misc={'parent': self.key}).generate_triad(roman_quality)
         chord_obj = ch(chord, self.notes[roman], roman_quality, n_measures=n) # Comment if dud
         return {'degree': degree, 'key': self.notes[roman], 'quality': roman_quality, 'chord': chord_obj}
     

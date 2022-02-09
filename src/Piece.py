@@ -1,3 +1,4 @@
+from Note import Note
 from Note import DrawableNote
 import util2 as utilcv2
 import cv2
@@ -17,6 +18,7 @@ class Piece(object):
         for v in self.voices:
             self.tracks[v] = []
         self.write()
+        self.drawn = False
 
     def write(self):
         for v in self.voices:
@@ -40,16 +42,55 @@ class Piece(object):
                     # flipped = False
                     # if v in ['Bass', 'Alto']:
                     #     flipped=True
-                    new_note = DrawableNote(raw_note, raw_beat, num_beats=1, 
-                                            beat_value=self.song.signature.time.bottom, measure=measure)
-                    # print(new_note.measure, n % self.beats_per_measure)
+                    enharmonic = False
+                    new_note = None
+                    if self.song.signature.key.key == 'F#':
+                        if raw_note.letter == 'C':
+                            replace = Note('B#', raw_note.octave, is_bass=raw_note.is_bass,
+                                 is_flipped=raw_note.is_flipped, ao_modifier=-1)
+                            new_note = DrawableNote(replace, raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                    if self.song.signature.key.key == 'C#':
+                        if raw_note.letter == 'C':
+                            replace = Note('B#', raw_note.octave, is_bass=raw_note.is_bass,
+                                 is_flipped=raw_note.is_flipped, ao_modifier=-1)
+                            new_note = DrawableNote(replace, raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                        if raw_note.letter == 'F':
+                            replace = Note('E#', raw_note.octave, is_bass=raw_note.is_bass,
+                                 is_flipped=raw_note.is_flipped, ao_modifier=-1)
+                            new_note = DrawableNote(replace, raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                    if self.song.signature.key.key == 'Gb':
+                        if raw_note.letter == 'C':
+                            new_note = DrawableNote('Db', raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                    if self.song.signature.key.key == 'Cb':
+                        if raw_note.letter == 'C':
+                            new_note = DrawableNote('Cb', raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                        if raw_note.letter == 'F':
+                            new_note = DrawableNote('Fb', raw_beat, num_beats=1,
+                                                    beat_value=self.song.signature.time.bottom, measure=measure)
+                            enharmonic = True
+                    if not enharmonic:
+                        new_note = DrawableNote(raw_note, raw_beat, num_beats=1,
+                                                beat_value=self.song.signature.time.bottom, measure=measure)
+                    # print(v, new_note, enharmonic)
                     self.tracks[v].append(new_note)
                 lastnote = lookup_note
 
-    def draw(self, filename):
+    def draw(self, filename, overwritename=None):
         pages_needed = int((self.measures + 1) / MEASURES_PER_PAGE) + 1
         pages = []
         fpdf = FPDF()
+        if overwritename is not None:
+            self.song.name = overwritename
         for i in range(pages_needed):
             if i == 0:
                 page = utilcv2.generate_first_page(self.song, self.tracks)
@@ -60,6 +101,13 @@ class Piece(object):
             cv2.imwrite(filename + '_%d' % i + '.jpg', page)
             fpdf.image(filename + '_%d' % i + '.jpg', x=0, y=0, w=200)
         fpdf.output('%s.pdf' % filename, 'F')
+        self.drawn = True
+
+    def get_first_line_of_song(self):
+        if not self.drawn:
+            print("Piece not drawn yet")
+            return None
+
 
     def __str__(self):
         retstr = "%d Measures" % self.measures

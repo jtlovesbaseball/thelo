@@ -2,7 +2,6 @@ import sys
 sys.path.append('src/')
 
 import cv2
-import random
 import numpy as np
 from Key import Key
 from Time import Time
@@ -181,29 +180,29 @@ def generate_notes(tracks, m, beats_per_measure):
         if bass:
             if below:
                 cv2.line(patch, (x0, BASS_SINGLE_LEDGER),
-                        (x1, BASS_SINGLE_LEDGER), BLACK_TRI)
+                        (x1, BASS_SINGLE_LEDGER), BLACK_TRI, thickness=2)
                 if double:
                     cv2.line(patch, (x0, BASS_DOUBLE_LEDGER),
-                             (x1, BASS_DOUBLE_LEDGER), BLACK_TRI)
+                             (x1, BASS_DOUBLE_LEDGER), BLACK_TRI, thickness=2)
             else:
                 cv2.line(patch, (x0, BASS_SINGLE_LEDGER_A),
-                        (x1, BASS_SINGLE_LEDGER_A), BLACK_TRI)
+                        (x1, BASS_SINGLE_LEDGER_A), BLACK_TRI, thickness=2)
                 if double:
                     cv2.line(patch, (x0, BASS_DOUBLE_LEDGER_A),
-                             (x1, BASS_DOUBLE_LEDGER_A), BLACK_TRI)
+                             (x1, BASS_DOUBLE_LEDGER_A), BLACK_TRI, thickness=2)
         else:
             if below:
                 cv2.line(patch, (x0, TREBLE_SINGLE_LEDGER_B),
-                        (x1, TREBLE_SINGLE_LEDGER_B), BLACK_TRI)
+                        (x1, TREBLE_SINGLE_LEDGER_B), BLACK_TRI, thickness=2)
                 if double:
                     cv2.line(patch, (x0, TREBLE_DOUBLE_LEDGER_B),
-                             (x1, TREBLE_DOUBLE_LEDGER_B), BLACK_TRI)
+                             (x1, TREBLE_DOUBLE_LEDGER_B), BLACK_TRI, thickness=2)
             else:
                 cv2.line(patch, (x0, TREBLE_SINGLE_LEDGER),
-                        (x1, TREBLE_SINGLE_LEDGER), BLACK_TRI)
+                        (x1, TREBLE_SINGLE_LEDGER), BLACK_TRI, thickness=2)
                 if double:
                     cv2.line(patch, (x0, TREBLE_DOUBLE_LEDGER),
-                             (x1, TREBLE_DOUBLE_LEDGER), BLACK_TRI)
+                             (x1, TREBLE_DOUBLE_LEDGER), BLACK_TRI, thickness=2)
         return patch
 
     def draw_note(patch, note, x, y, v):
@@ -218,7 +217,7 @@ def generate_notes(tracks, m, beats_per_measure):
             cv2.line(patch, (note_center_x + stem_offset_x, note_center_y),
                      (note_center_x + stem_offset_x, note_center_y + stem_offset_y),
                      BLACK_TRI, 2)
-            cv2.circle(patch, (note_center_x + 4, note_center_y), 2, BLACK_TRI, -1)
+            cv2.circle(patch, (note_center_x + 14, note_center_y + 4), 3, BLACK_TRI, -1)
         if note.num_beats == 2:
             cv2.circle(patch, (note_center_x, note_center_y), 8, BLACK_TRI, 2)
             cv2.line(patch, (note_center_x + stem_offset_x, note_center_y),
@@ -241,7 +240,8 @@ def generate_notes(tracks, m, beats_per_measure):
 
     for bpm in range(beats_per_measure):
         below[bpm] = None
-    for v in ["B", "T", "A", "S"]:
+    prev_abs = -1
+    for v in ["B",  "A", "T", "S"]:
         voice_notes_in_m = [t for t in tracks[v] if t.in_measure(m)]
         for note in voice_notes_in_m:
             this_beat = note.start_beat
@@ -252,7 +252,7 @@ def generate_notes(tracks, m, beats_per_measure):
             note_center_y = -3
             is_bass = True
             if v == 'T':
-                is_bass = False if note.absolute_order > 18 else True
+                is_bass = note.bass  # False if note.absolute_order > 14 else True #16 D?
             if v == 'A':
                 is_bass = True if note.absolute_order < 14 else False
             if v == 'S':
@@ -275,8 +275,8 @@ def generate_notes(tracks, m, beats_per_measure):
                     patch = draw_ledger_lines(patch, start_x, end_x,
                                               True, False, False)
 
-            if note.absolute_order < 14 and not is_bass:
-                if note.absolute_order < 12 and not is_bass:
+            if note.absolute_order < 18 and not is_bass:
+                if note.absolute_order < 16 and not is_bass:
                     patch = draw_ledger_lines(patch, start_x, end_x,
                                               False, True, True)
                 else:
@@ -438,8 +438,6 @@ def generate_next_page(song, tracks, pagenum, pagetotal):
         if final_measure:
             x1 += 10
 
-        print(len(song_measure), song_measure_n)
-
         chord_annotation = "Undefined"
         if song_measure_n == len(song_measure):  # This may need to happen earlier? Onlya problem here
             break
@@ -505,7 +503,7 @@ def make_staff(patch, left=True, right=False):
     if left:
         cv2.line(patch, (0, 40), (0, 230 + 25), color=(0, 0, 0), thickness=1)
     if right:
-        cv2.line(patch, (w - 1, 40), (w - 1, 230 + 25 + 25), color=(0, 0, 255), thickness=1)
+        cv2.line(patch, (w - 1, 40), (w - 1, 230 + 25), color=(0, 0, 255), thickness=2)
     return patch
 
 
@@ -578,7 +576,7 @@ def insert_keysignature(measure, signature, h, measure_number, time):  # Two par
     clef_image = create_clef_image(h)
     clef_image = make_staff(clef_image)
     cv2.putText(clef_image, "%d" % measure_number, (clef_image.shape[1] - 36, 36),
-                fontScale=.89, fontFace=cv2.FONT_HERSHEY_PLAIN, color=(0, 0, 0), thickness=2)
+                fontScale=1.5, fontFace=cv2.FONT_HERSHEY_PLAIN, color=(0, 0, 0), thickness=2)
     acci_image = create_accidentals(signature, h)
     acci_image = make_staff(acci_image, left=False)
     if time:
