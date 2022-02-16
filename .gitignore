@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PDF/JPG output filtering
+*.pdf
+*.jpg
+
+# Various Folders
+test/*
+notebook/*

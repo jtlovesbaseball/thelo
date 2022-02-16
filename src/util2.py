@@ -131,12 +131,14 @@ def add_time_info(timesig):
     return a
 
 
-def generate_notes(tracks, m, beats_per_measure):
+def generate_notes(tracks, m, beats_per_measure, tenor_up=True):
 
     TREBLE_DOUBLE_LEDGER = 10
     TREBLE_SINGLE_LEDGER = 25
     TREBLE_SINGLE_LEDGER_B = 115
     TREBLE_DOUBLE_LEDGER_B = 130
+    TREBLE_TRIPLE_LEDGER = 145
+    TREBLE_QUAD_LEDGER = 160
     BASS_DOUBLE_LEDGER_A = 140 + 25
     BASS_SINGLE_LEDGER_A = 155 + 25
     BASS_SINGLE_LEDGER = 245 + 25
@@ -176,7 +178,7 @@ def generate_notes(tracks, m, beats_per_measure):
             return 8
         return 0
 
-    def draw_ledger_lines(patch, x0, x1, bass, below, double):
+    def draw_ledger_lines(patch, x0, x1, bass, below, double, triple=False, quad=False):
         if bass:
             if below:
                 cv2.line(patch, (x0, BASS_SINGLE_LEDGER),
@@ -203,6 +205,12 @@ def generate_notes(tracks, m, beats_per_measure):
                 if double:
                     cv2.line(patch, (x0, TREBLE_DOUBLE_LEDGER),
                              (x1, TREBLE_DOUBLE_LEDGER), BLACK_TRI, thickness=2)
+        if triple:
+            cv2.line(patch, (x0, TREBLE_TRIPLE_LEDGER),
+                     (x1, TREBLE_TRIPLE_LEDGER), BLACK_TRI, thickness=2)
+        if quad:
+            cv2.line(patch, (x0, TREBLE_QUAD_LEDGER),
+                     (x1, TREBLE_QUAD_LEDGER), BLACK_TRI, thickness=2)
         return patch
 
     def draw_note(patch, note, x, y, v):
@@ -210,6 +218,14 @@ def generate_notes(tracks, m, beats_per_measure):
         stem_offset_y = 52 if v in ['B', 'A'] else -52
         note_center_x = x
         note_center_y = y
+        BLACK_TRI = (0, 0, 0)
+        if v == 'A':
+            note.is_bass = False
+            BLACK_TRI = (0, 0, 255)
+        if v == 'S':
+            BLACK_TRI = (147, 20, 255)
+        if v == 'T':
+            BLACK_TRI = (255, 0, 0)
         if note.num_beats == 4:
             cv2.circle(patch, (note_center_x, note_center_y), 8, BLACK_TRI, 2)
         if note.num_beats == 3:
@@ -253,8 +269,10 @@ def generate_notes(tracks, m, beats_per_measure):
             is_bass = True
             if v == 'T':
                 is_bass = note.bass  # False if note.absolute_order > 14 else True #16 D?
+
             if v == 'A':
-                is_bass = True if note.absolute_order < 14 else False
+                # is_bass = True if note.absolute_order < 14 else False
+                is_bass = False
             if v == 'S':
                 is_bass = False
             note_center_y = calculate_note_y_val(note, is_bass=is_bass)
@@ -291,12 +309,20 @@ def generate_notes(tracks, m, beats_per_measure):
                     patch = draw_ledger_lines(patch, start_x, end_x,
                                               False, False, False)
 
+            if note.absolute_order <= 13 and v == 'T' and tenor_up:
+                patch = draw_ledger_lines(patch, start_x, end_x,
+                                          False, True, True, True, False)
+            if note.absolute_order <= 11 and v == 'T' and tenor_up:
+                patch = draw_ledger_lines(patch, start_x, end_x,
+                                          False, True, True, True, True)
+            if v == 'A':
+                note.is_bass = False
             patch = draw_note(patch, note, note_center_x, note_center_y, v)
             below[this_beat] = note
     return patch
 
 
-def generate_first_page(song, tracks):
+def generate_first_page(song, tracks, tenor_up=True):
     page = np.zeros((PAGE_H, PAGE_W, 3), dtype=np.uint8)
     page[:] = 255  # whiteout
 
@@ -329,7 +355,7 @@ def generate_first_page(song, tracks):
     # Main measure makin loop
     final_measure = False
     for m in range(len(song_measure)):
-        note_img = generate_notes(tracks, m, song_signature.time.top)
+        note_img = generate_notes(tracks, m, song_signature.time.top, tenor_up)
         if m > MEASURES_PER_PAGE - 2:
             break
         if m == 0:
@@ -379,7 +405,7 @@ def generate_first_page(song, tracks):
     return page
 
 
-def generate_next_page(song, tracks, pagenum, pagetotal):
+def generate_next_page(song, tracks, pagenum, pagetotal, tenor_up=True):
     page = np.zeros((PAGE_H, PAGE_W, 3), dtype=np.uint8)
     page[:] = 255  # whiteout
     prev_chord = "undefined"
@@ -410,7 +436,7 @@ def generate_next_page(song, tracks, pagenum, pagetotal):
     i = 0
     for m in range(MEASURES_PER_PAGE):
         song_measure_n = start_measure + m
-        note_img = generate_notes(tracks, song_measure_n, song_signature.time.top)
+        note_img = generate_notes(tracks, song_measure_n, song_signature.time.top, tenor_up)
 
         if m % 4 == 0:
             measure = make_first_measure_of_line(standard_dims,

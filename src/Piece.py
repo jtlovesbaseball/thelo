@@ -85,7 +85,7 @@ class Piece(object):
                     self.tracks[v].append(new_note)
                 lastnote = lookup_note
 
-    def draw(self, filename, overwritename=None):
+    def draw(self, filename, overwritename=None, tenor_up=True):
         pages_needed = int((self.measures + 1) / MEASURES_PER_PAGE) + 1
         pages = []
         fpdf = FPDF()
@@ -93,9 +93,9 @@ class Piece(object):
             self.song.name = overwritename
         for i in range(pages_needed):
             if i == 0:
-                page = utilcv2.generate_first_page(self.song, self.tracks)
+                page = utilcv2.generate_first_page(self.song, self.tracks, tenor_up)
             else:
-                page = utilcv2.generate_next_page(self.song, self.tracks, i, pages_needed)
+                page = utilcv2.generate_next_page(self.song, self.tracks, i, pages_needed, tenor_up)
             pages.append(page)
             fpdf.add_page()
             cv2.imwrite(filename + '_%d' % i + '.jpg', page)

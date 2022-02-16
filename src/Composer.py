@@ -19,6 +19,10 @@ class Composer(object):
             self.select_fourvoice_random()
         if method == 'root':
             self.select_fourvoice_root()
+        if method == 'first':
+            self.select_fourvoice_firstinversion()
+        if method == 'second':
+            self.select_fourvoice_secondinversion()
         finished = self.finish_piece(song)
         return finished
         
@@ -43,6 +47,14 @@ class Composer(object):
         outlist = []
         for note in notelist:
             if lower <= note <= upper:
+                outlist.append(note)
+        return outlist
+
+    @staticmethod
+    def bound_list_low(notelist, lower):
+        outlist = []
+        for note in notelist:
+            if lower < note:
                 outlist.append(note)
         return outlist
 
@@ -108,17 +120,35 @@ class Composer(object):
                 #  the alto was singing the 3rd and the soprano was singing the
                 #  5th that these bounds would ensure root position. Doesn't
                 #  work for minor 3rds
+
                 if voice == "S":
-                    below = Note(letter='C#', octave=4) # Do this smarter to STAB!
-                    above = Note(letter='Db', octave=5)
+                    if chord.root == 'F#':
+                        below = Note(letter='B', octave=4)  # Do this smarter to STAB!
+                        above = Note(letter='D', octave=5) # Do this smarter to STAB!
+                    elif chord.root == 'G' and chord.quality == 'dim':
+                        below = Note(letter='C', octave=4)  # Do this smarter to STAB!
+                        above = Note(letter='D', octave=5)
+                    else:
+                        below = Note(letter='C#', octave=4)  # Do this smarter to STAB!
+                        above = Note(letter='Db', octave=5)
                     valid_notes = Composer.bound_list(valid_notes, below, above)
                 if voice == "T":
-                    below = Note(letter='G', octave=3) # Do this smarter to STAB!
-                    above = Note(letter='Gb', octave=4)
+                    if note == 'F#':
+                        below = Note(letter='F#', octave=4) # Do this smarter to STAB!
+                        above = Note(letter='A', octave=4)
+                    else:
+                        below = Note(letter='G', octave=3)
+                        above = Note(letter='Gb', octave=4)
                     valid_notes = Composer.bound_list(valid_notes, below, above)
                 if voice == "A":
                     below = Note(letter='B', octave=3) # Do this smarter to STAB!
                     above = Note(letter='Bb', octave=4)
+                    # if chord.root == 'G#':
+                    #     below = Note(letter='A', octave=3)  # Do this smarter to STAB!
+                    #     above = Note(letter='D', octave=4)
+                    if chord.root == 'G':
+                        below = Note(letter='Bb', octave=3)  # Do this smarter to STAB!
+                        above = Note(letter='B', octave=4)
                     valid_notes = Composer.bound_list(valid_notes, below, above)
                 if voice == "B":
                     below = Note(letter='G', octave=2) # Do this smarter to STAB!
@@ -127,14 +157,101 @@ class Composer(object):
                 for beat in self.voices[voice].notes[beat_idx]:
                     if voice == 'T':
                         beat.is_bass = False
-                    try:
-                        if beat == valid_notes[0]:
-                            beat.selected = True
+                    if beat == valid_notes[0]:
+                        beat.selected = True
+                    else:
+                        beat.unselected = True
+
+    def select_fourvoice_firstinversion(self):
+        for beat_idx in range(len(self.song.song_beats.keys())):
+            chord = self.song.song_beats[beat_idx]
+            bass_val = -1
+            prev_hash = {}
+            for voice in ["B", "T", "A", "S"]:
+                note = None
+
+                if voice == "S":
+                    note = chord.notes[0]
+                if voice == "T":
+                    note = chord.notes[1]
+                if voice == "A":
+                    note = chord.notes[2]
+                if voice == "B":
+                    note = chord.notes[0]
+                valid_notes = list(filter(lambda x: x.letter == note, self.voices[voice].notes[beat_idx]))
+                # for vn in valid_notes:
+                #     print(vn)
+                # print("--")
+
+                for beat in self.voices[voice].notes[beat_idx]:
+                    if voice == 'A':
+                        beat.is_bass = False
+                        below = prev_hash['T']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+                        # for vn in valid_notes:
+                        #     print(below, vn)
+                        # print("--")
+                    if voice == 'S':
+                        below = prev_hash['A']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+
+                    if voice == 'T':
+                        beat.is_bass = False
+                        below = prev_hash['B']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+
+                    if beat == valid_notes[0]:
+                        beat.selected = True
+                        if voice != 'B':
+                            prev_hash[voice] = beat
                         else:
-                            beat.unselected = True
-                    except IndexError:
-                        pass
-    
+                            prev_hash[voice] = beat.return_up_octave()
+                    else:
+                        beat.unselected = True
+
+    def select_fourvoice_secondinversion(self):
+        for beat_idx in range(len(self.song.song_beats.keys())):
+            chord = self.song.song_beats[beat_idx]
+            bass_val = -1
+            prev_hash = {}
+            for voice in ["B", "T", "A", "S"]:
+                note = None
+
+                if voice == "S":
+                    note = chord.notes[2]
+                if voice == "T":
+                    note = chord.notes[1]
+                if voice == "A":
+                    note = chord.notes[0]
+                if voice == "B":
+                    note = chord.notes[2]
+                valid_notes = list(filter(lambda x: x.letter == note, self.voices[voice].notes[beat_idx]))
+
+                for beat in self.voices[voice].notes[beat_idx]:
+
+                    if voice == 'A':
+                        beat.is_bass = False
+                        below = prev_hash['T']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+                    if voice == 'S':
+                        below = prev_hash['A']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+
+                    if voice == 'T':
+                        beat.is_bass = True
+                        below = prev_hash['B']
+                        valid_notes = Composer.bound_list_low(valid_notes, below)
+
+                    if beat == valid_notes[0]:
+                        beat.selected = True
+                        prev_hash[voice] = beat
+                    else:
+                        beat.unselected = True
+                        # for vn in valid_notes:
+                        #     if vn.selected:
+                        #         print(voice, vn)
+                        #     print("--")
+
     def __str__(self):
         voicestr = ""
         for v in self.voices:

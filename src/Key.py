@@ -23,7 +23,7 @@ CIRCLE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
 C_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'Fb', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
 G_FLAT_CIRCLE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb']
 F_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-C_SHARP_CIRCLE = ['C', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B#']
+C_SHARP_CIRCLE = ['B#', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 SHARP_DOMINATED = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#']
 FLAT_DOMINATED = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']
@@ -54,10 +54,12 @@ class Key(object):
             self.circle = F_SHARP_CIRCLE
         if self.key == "C#":
             self.circle = C_SHARP_CIRCLE
+        if self.key == "G#":
+            self.circle = C_SHARP_CIRCLE  # No G_SHARP circle
         self.tonic_val = self.circle.index(self.key)
         self.indicies = [(self.tonic_val + i) % OCTAVE for i in MAJOR_MODE]
         self.notes = [self.circle[i] for i in self.indicies]
-        
+
         if str(key).lower() == 'a' and tonality == 'minor':
             self.notes = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
         if str(key).lower() == 'c' and tonality == 'major':

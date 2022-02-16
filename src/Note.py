@@ -1,5 +1,5 @@
-OCTAVE_ORDER = ['C', 'Db', 'C#', 'D', 'D#', 'Eb', 'E', 'Fb', 'E#', 'F', 'F#', 'Gb', 'G',
-                'Ab', 'G#', 'A', 'A#', 'Bb', 'B', 'Cb']
+OCTAVE_ORDER = ['Cb', 'C', 'Db', 'C#', 'D', 'D#', 'Eb', 'E', 'Fb', 'E#', 'F', 'F#', 'Gb', 'G',
+                'Ab', 'G#', 'A', 'A#', 'Bb', 'B', 'B#']
 NOTEVALS_SIMPLE = {1: 'Quarter', 2: 'Half', 3: 'Dotted Half', 4: 'Whole'}
 SIMPLE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
 
@@ -26,6 +26,13 @@ class DrawableNote(object):
         
     def increment_beat(self):
         self.num_beats += 1
+
+    @staticmethod
+    def create(letter, octave, bass, flip, start_beat,
+               num_beat, beat_val, measure):
+        n = Note(letter, octave, is_bass=bass, is_flipped=flip)
+        dn= DrawableNote(n, start_beat, num_beat, beat_val, measure)
+        return dn
         
     def __str__(self):
         return "%s Note %s (beat %d)" % (NOTEVALS_SIMPLE[self.num_beats], self.lookup, self.start_beat + 1)
@@ -44,6 +51,7 @@ class Note(object):
         self.order = SIMPLE_ORDER.index(self.letter[0])
         self.absolute_order = ((self.octave - 2) * 8) + self.order
         self.absolute_order += ao_modifier
+
     
     def select(self):
         self.selected = True
@@ -52,6 +60,10 @@ class Note(object):
     def unselect(self):
         self.unselected = True
         self.selected = False
+
+    def return_up_octave(self):
+        new = Note(self.letter, self.octave + 1, is_bass=self.is_bass, is_flipped=self.is_flipped)
+        return new
     
     def __str__(self):
         if self.unselected:
