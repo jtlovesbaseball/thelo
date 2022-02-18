@@ -27,8 +27,22 @@ class Measure(object):
         return self.beat_chords
 
     def __str__(self):
+        # retstr = "["
+        # for i in range(self.n_beats):
+        #
+        #     chord = self.beat_chords[i]
+        #     if chord == 3:
+        #         continue
+        #     # print(chord)
+        #     retstr += "%2s%5s" % (self.beat_chords[i].root, self.beat_chords[i].quality)
+        # retstr += "]\n"
+        # return retstr
         retstr = "["
+        str_keys = False
+        if type(list(self.beat_chords.keys())[0]) == str:
+            str_keys = True
         for i in range(self.n_beats):
+            i = str(i) if str_keys else i
             chord = self.beat_chords[i]
             if chord == 3:
                 continue

@@ -59,7 +59,9 @@ class Composer(object):
         return outlist
 
     def select_fourvoice_naive(self):
+        str_keys = True if type(list(self.song.song_beats.keys())[0]) == str else False
         for beat_idx in range(len(self.song.song_beats.keys())):
+            beat_idx = str(beat_idx) if str_keys else beat_idx
             chord = self.song.song_beats[beat_idx]
             for voice in ["S", "A", "T", "B"]:
                 note = None
@@ -71,6 +73,7 @@ class Composer(object):
                     note = chord.notes[1]
                 if voice == "B":
                     note = chord.notes[0]
+                beat_idx = int(beat_idx)
                 valid_notes = list(filter(lambda x: x.letter == note , self.voices[voice].notes[beat_idx]))
                 for beat in self.voices[voice].notes[beat_idx]:
                     if beat == valid_notes[0]:
@@ -79,7 +82,9 @@ class Composer(object):
                         beat.unselected = True
 
     def select_fourvoice_random(self):
+        str_keys = True if type(list(self.song.song_beats.keys())[0]) == str else False
         for beat_idx in range(len(self.song.song_beats.keys())):
+            beat_idx = str(beat_idx) if str_keys else beat_idx
             chord = self.song.song_beats[beat_idx]
             random.randint(0, 2)
             for voice in ["S", "A", "T", "B"]:
@@ -92,6 +97,7 @@ class Composer(object):
                     note = chord.notes[random.randint(0, 2)]
                 if voice == "B":
                     note = chord.notes[random.randint(0, 2)]
+                beat_idx = int(beat_idx)
                 valid_notes = list(filter(lambda x: x.letter == note , self.voices[voice].notes[beat_idx]))
                 random.shuffle(valid_notes)
                 for beat in self.voices[voice].notes[beat_idx]:
@@ -101,7 +107,9 @@ class Composer(object):
                         beat.unselected = True
 
     def select_fourvoice_root(self):
+        str_keys = True if type(list(self.song.song_beats.keys())[0]) == str else False
         for beat_idx in range(len(self.song.song_beats.keys())):
+            beat_idx = str(beat_idx) if str_keys else beat_idx
             chord = self.song.song_beats[beat_idx]
             for voice in ["S", "A", "T", "B"]:
                 note = None
@@ -115,6 +123,7 @@ class Composer(object):
                 if voice == "B":
                     note = chord.notes[0]
 
+                beat_idx = int(beat_idx)
                 valid_notes = list(filter(lambda x: x.letter == note, self.voices[voice].notes[beat_idx]))
                 #  This isn't going to work. I made the fault assumption that if
                 #  the alto was singing the 3rd and the soprano was singing the
@@ -163,7 +172,9 @@ class Composer(object):
                         beat.unselected = True
 
     def select_fourvoice_firstinversion(self):
+        str_keys = True if type(list(self.song.song_beats.keys())[0]) == str else False
         for beat_idx in range(len(self.song.song_beats.keys())):
+            beat_idx = str(beat_idx) if str_keys else beat_idx
             chord = self.song.song_beats[beat_idx]
             bass_val = -1
             prev_hash = {}
@@ -178,11 +189,11 @@ class Composer(object):
                     note = chord.notes[2]
                 if voice == "B":
                     note = chord.notes[0]
+                beat_idx = int(beat_idx)
                 valid_notes = list(filter(lambda x: x.letter == note, self.voices[voice].notes[beat_idx]))
                 # for vn in valid_notes:
                 #     print(vn)
                 # print("--")
-
                 for beat in self.voices[voice].notes[beat_idx]:
                     if voice == 'A':
                         beat.is_bass = False
@@ -210,7 +221,9 @@ class Composer(object):
                         beat.unselected = True
 
     def select_fourvoice_secondinversion(self):
+        str_keys = True if type(list(self.song.song_beats.keys())[0]) == str else False
         for beat_idx in range(len(self.song.song_beats.keys())):
+            beat_idx = str(beat_idx) if str_keys else beat_idx
             chord = self.song.song_beats[beat_idx]
             bass_val = -1
             prev_hash = {}
@@ -225,6 +238,7 @@ class Composer(object):
                     note = chord.notes[0]
                 if voice == "B":
                     note = chord.notes[2]
+                beat_idx = int(beat_idx)  # This is so ugly. JSON list all int..
                 valid_notes = list(filter(lambda x: x.letter == note, self.voices[voice].notes[beat_idx]))
 
                 for beat in self.voices[voice].notes[beat_idx]:

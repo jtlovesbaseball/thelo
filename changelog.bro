@@ -13,3 +13,7 @@ V0- Good Enough for facebook Release
 >First inversion methods
 >Triple/quad ledgers for upper bass and lower treble
 >Second inversion methods
+
+2/18 V0.c-
+>Song and piece are serializable with ugly hack
+> Grader skeleton written

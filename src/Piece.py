@@ -3,6 +3,8 @@ from Note import DrawableNote
 import util2 as utilcv2
 import cv2
 from fpdf import FPDF
+import json
+import jsonpickle
 
 MEASURES_PER_PAGE = 16
 
@@ -108,6 +110,15 @@ class Piece(object):
             print("Piece not drawn yet")
             return None
 
+    def serialize(self, filename):
+        obj = jsonpickle.encode(self)
+        with open(filename, 'w') as ost:
+            json.dump(obj, ost)
+
+    @staticmethod
+    def deserialize(filename):
+        j = jsonpickle.decode(json.load(open(filename, 'r')))
+        return j
 
     def __str__(self):
         retstr = "%d Measures" % self.measures

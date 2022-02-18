@@ -16,9 +16,7 @@ class Chord(object):
         self.quality = quality
         self.n = n_measures
         self.n_remaining = n_measures
-        
-        self.SEVEN_NAMES = ["root", " 3rd", " 5th", " 7th"]
-        
+
         # Each time theres an inversion, pop the root and play it as the top
         for inv in range(inversion):
             if self.notes[1] in ['#', 'b', 'bb']:
@@ -33,7 +31,7 @@ class Chord(object):
     def __str__(self):
         chordstr = ""
         for i in range(len(self.notes)):
-            chordstr += '%s: %s | ' % (self.SEVEN_NAMES[i], self.notes[i])
+            chordstr += '%s: %s | ' % (Chord.SEVEN_NAMES[i], self.notes[i])
         chordstr = chordstr[:-3] if '|' in chordstr else chordstr
         retstr = """Chord: %s %s %s (%d measure) %s """ % (self.root, self.quality, '(Inversion %d)' % self.inversion if self.inversion != 0 else '(Root Position)', self.n ,chordstr)
         return retstr

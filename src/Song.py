@@ -1,5 +1,7 @@
 from util import MajorChordTransition
 from Measure import Measure
+import json
+import jsonpickle
 
 class Song(object):
     def __init__(self, name, composer, signature, original=None):
@@ -52,8 +54,20 @@ class Song(object):
         self.tonal_status = self.major_ct.transition(self.tonal_status)
         
     def get_chord(self, beat):
+        str_keys = True if type(list(self.song_beats.keys())[0]) == str else False
+        beat = str(beat) if str_keys else beat
         return self.song_beats[beat]
-        
+
+    def serialize(self, filename):
+        obj = jsonpickle.encode(self)
+        with open(filename, 'w') as ost:
+            json.dump(obj, ost)
+
+    @staticmethod
+    def deserialize(filename):
+        j = jsonpickle.decode(json.load(open(filename, 'r')))
+        return j
+
     def __str__(self):
         chord_str = """"""
         measure_str = """"""

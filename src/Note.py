@@ -52,7 +52,6 @@ class Note(object):
         self.absolute_order = ((self.octave - 2) * 8) + self.order
         self.absolute_order += ao_modifier
 
-    
     def select(self):
         self.selected = True
         self.unselected = False

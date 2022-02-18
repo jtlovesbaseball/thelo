@@ -51,8 +51,10 @@ def annotate_chords(measure, prev_measure_chord, w, patch):
     beats_per_measure = measure.n_beats
     spacing = w / beats_per_measure
     draw = False
+    str_keys = True if type(list(measure.beat_chords.keys())[0]) == str else False
     for i in range(beats_per_measure):
-        beat = measure.beat_chords[i]
+        idx = str(i) if str_keys else i
+        beat = measure.beat_chords[idx]
         if beat == 3:
             continue
         new_x, new_y = int(1 + (spacing * i)), 25
@@ -395,6 +397,8 @@ def generate_first_page(song, tracks, tenor_up=True):
         if final_measure:
             x1 += 10
         # print(m, x0, y0, x1, y1)
+        # str_keys = True if type(list(song_measure.keys())[0]) == str else False
+        # m = str(m) if str_keys else m
         chord_annotation, prev_chord = annotate_chords(song_measure[m], prev_chord, MEASURE_W,
                                                        page[y0-50:y0, x1-300:x1])
         page[y0-50:y0, x1-300:x1] = chord_annotation

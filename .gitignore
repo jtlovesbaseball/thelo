@@ -131,6 +131,7 @@ dmypy.json
 # PDF/JPG output filtering
 *.pdf
 *.jpg
+*.json
 
 # Various Folders
 test/*
