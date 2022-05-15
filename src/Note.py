@@ -19,6 +19,8 @@ class DrawableNote(object):
         self.measure = measure
         self.order = note.order
         self.absolute_order = note.absolute_order
+        self.pure_order = note.pure_order
+        self.gradeval = -1
         # Add logic to decrement order and abs order of E#
         
     def in_measure(self, m):
@@ -50,7 +52,9 @@ class Note(object):
         self.unselected = False
         self.order = SIMPLE_ORDER.index(self.letter[0])
         self.absolute_order = ((self.octave - 2) * 8) + self.order
+        self.pure_order = self.absolute_order
         self.absolute_order += ao_modifier
+
 
     def select(self):
         self.selected = True

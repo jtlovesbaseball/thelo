@@ -32,3 +32,6 @@ piece_0.draw("song_0", overwritename="1st Inv Chord Voicings in %s %s" % (k.key,
 song_0.serialize(SONG_TITLE)
 song_1 = Song.deserialize(SONG_TITLE)
 print(song_0.__str__() == song_1.__str__())
+
+snoop = Grader(piece=piece_0)
+song_1_score = snoop.grade()
